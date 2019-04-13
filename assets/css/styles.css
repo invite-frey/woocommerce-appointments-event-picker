@@ -1,0 +1,71 @@
+.wcaep-datepicker-list{
+    display: flex;
+    flex-direction: column;
+}
+
+.wcaep-available-dates-header{
+    font-size: 1rem;
+    margin: 1rem;
+}
+
+.wcaep-available-date,
+.wcaep-sold-out{
+    font-size: 1rem;
+    margin: 1rem;
+    padding: 1rem;
+}
+
+.wcaep-available-date,
+.wcaep-sold-out{
+    background: rgba(246,246,246,0.7);
+    line-height: auto;
+}
+.wcaep-available-date:hover{
+    background: rgba(200,200,200,0.7);
+}
+.wcaep-available-date.date-selected{
+    border: 2px solid rgba(100,100,100,0.7);
+    border-radius: 4px;
+}
+
+.wcaep-available-date>a
+{
+    background: none;
+    border: none;
+    width: 100%;
+}
+
+
+.wcaep-sold-out{
+    font-size: 1.2rem;
+    color: red;
+}
+
+li.product{
+    overflow: hidden;
+}
+
+li.product>.event-availability-status{
+    position: absolute;
+    width: 150%;
+    height: 20%;
+    top: 0;
+    left: 0;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+    display: none;
+}
+
+li.product>.event-availability-status.event-sold-out{
+    background-color: rgba(178, 0, 0, 0.58);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    transform: rotate(-45deg) translate(-25%,-50%);
+    transform-origin: 50% 100%;
+}
+
+
+
