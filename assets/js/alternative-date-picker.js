@@ -69,6 +69,8 @@ jQuery( document ).ready( ($) => {
             .done( function( data ) {
                 console.log(data);
                 const start_date = new Date();
+                const now = new Date();
+                let min_bookable_date = new Date();
                 let days_to_search = 365;
                 let sold_out = true;
 
@@ -90,6 +92,23 @@ jQuery( document ).ready( ($) => {
                             days_to_search = Math.ceil(data.max_date.value/24.0);
                             break;
 
+                    }
+                }
+                if( data.min_date ){
+                    
+                    switch( data.min_date.unit ){
+                        case 'month':
+                            min_bookable_date.setMonth( now.getMonth() + data.min_date.value );
+                            break;
+                        case 'day':
+                            min_bookable_date.setDate( now.getDate() + data.min_date.value );
+                            break;
+                        case 'week':
+                            min_bookable_date.setDate( now.getDate() + data.min_date.value * 7 );
+                            break;
+                        case 'hour':
+                            min_bookable_date.setHours( now.getHours() + data.min_date.value );
+                            break;
                     }
                 }
 
@@ -125,17 +144,25 @@ jQuery( document ).ready( ($) => {
                         const lang = navigator.language || 'en_US';
                         const dateString = date.toLocaleDateString(lang, options);
 
-                        $('.picker .wcaep-datepicker-list').append(`
-                            <div class="wcaep-available-date" id="available-date-${ymdIndex}" data-day="${day}" data-month="${month}" data-year="${year}">
-                                <a class="wcaep-date-option" href="#" data-day="${day}" data-month="${month}" data-year="${year}">${dateString}</a>
-                            </div>   
-                        `)
+                        if( date.getTime() > min_bookable_date.getTime() ){
+                            $('.picker .wcaep-datepicker-list').append(`
+                                <div class="wcaep-available-date" id="available-date-${ymdIndex}" data-day="${day}" data-month="${month}" data-year="${year}">
+                                    <a class="wcaep-date-option" href="#" data-day="${day}" data-month="${month}" data-year="${year}">${dateString}</a>
+                                </div>   
+                            `)
+                        }else{
+                            $('.picker .wcaep-datepicker-list').append(`
+                                <div class="wcaep-sold-out" id="available-date-${ymdIndex}" data-day="${day}" data-month="${month}" data-year="${year}">
+                                    <span>${dateString} CLOSED</span>
+                                </div>   
+                            `)
+                        }
                     }
                 }
 
                 if(sold_out){
                     //Are we really sold out, or is event in the past or cancelled.
-                    const unavailable_message = data.fully_scheduled_days.length===0 ? "NO LONGER AVAILABLE" : "SOLD OUT";
+                    const unavailable_message = data.fully_scheduled_days.length===0 ? "Closed For Bookings" : "SOLD OUT";
                     $('.picker .wcaep-datepicker-list').append(`
                         <div class="wcaep-sold-out">
                             ${unavailable_message}
