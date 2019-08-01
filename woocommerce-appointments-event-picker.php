@@ -62,11 +62,12 @@ function appointment_products($atts) {
         'ids'     => '',
         'skus'    => '',
         'product_type'    => 'appointment',
+        'category' => '',
         'show_historical_appointments' => 'false'
 
     ), $atts );
 
-
+    
     $query_args = array(
         'post_type'           => 'product',
         'post_status'         => 'publish',
@@ -84,6 +85,15 @@ function appointment_products($atts) {
                                     ),
     );
 
+    if( ! empty( $atts['category'] ) && strlen( $atts['category'] ) > 0 ){
+        array_push($query_args['tax_query'],array(
+            'taxonomy' => 'product_cat',
+            'field'    => 'slug',
+            'terms'    => $atts['category'],
+        ));
+
+    }
+
     if ( ! empty( $atts['skus'] ) ) {
         $query_args['meta_query'][] = array(
             'key'     => '_sku',
@@ -95,7 +105,6 @@ function appointment_products($atts) {
     if ( ! empty( $atts['ids'] ) ) {
         $query_args['post__in'] = array_map( 'trim', explode( ',', $atts['ids'] ) );
     }
-
     return product_loop( $query_args, $atts, 'products' );
 }
 

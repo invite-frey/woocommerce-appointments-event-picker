@@ -45,7 +45,7 @@ jQuery( document ).ready( ($) => {
     const write_datelist_wrapper = (container) => {
         container.append(`
             <div class="wcaep-datepicker-list">
-            <div class="wcaep-available-dates-header">Available Dates</div>
+            <div class="wcaep-available-dates-header">Select a Date</div>
             </div>
         `);
     }
