@@ -6,6 +6,13 @@ Woocommerce Appointments comes with a calendar view style datepicker by default.
 
 Installing this plugin overrides the default datepicker and displays a list of all available slots for a particular event instead.
 
+In addition some appointment (event) specific items are shown in the Woocommerce shop loop and single product summary:
+
+* List of event dates
+* Shows a label on the product when limited (< 5) slots are available.
+* Displays a "SOLD OUT" banner on a product when no more open slots are available
+* Displays a "CLOSED for bookings" banner on a product if the the next event is in the future, but the current date is less than the required lead time for bookings.
+
 ### Shortcodes
 
 `[appointment_products]`
