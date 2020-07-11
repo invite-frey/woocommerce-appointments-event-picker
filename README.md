@@ -10,7 +10,7 @@ Installing this plugin overrides the default datepicker and displays a list of a
 
 `[appointment_products]`
 
-Lists all appointable product types. Similar to the standard Woocommerce `[products]` shortcode.
+Lists all products of type Appointable. Similar to the standard Woocommerce `[products]` shortcode.
 
 Supported attributes:
 
