@@ -16,6 +16,7 @@ Supported attributes:
 
 * `orderby` - Refer to [Woocommerce docs](https://docs.woocommerce.com/document/woocommerce-shortcodes/)
 * `order` - Refer to [Woocommerce docs](https://docs.woocommerce.com/document/woocommerce-shortcodes/)
+* `category` - Refer to [Woocommerce docs](https://docs.woocommerce.com/document/woocommerce-shortcodes/)
 * `show_historical_appointments` - false|true Default is false. If set to false events with available slots only in the past will not be shown.
 
 ### Prerequisites
