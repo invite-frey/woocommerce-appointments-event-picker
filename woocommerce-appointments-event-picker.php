@@ -31,9 +31,9 @@ include_once( plugin_dir_path( __DIR__ ) . 'woocommerce-appointments/woocommerce
  * Install the alternative datepicker js code
  */
 
-add_action( 'wp_enqueue_scripts', 'my_plugin_override' );
+add_action( 'wp_enqueue_scripts', 'is_wep_enqueue_files' );
 
-function my_plugin_override() {
+function is_wep_enqueue_files() {
     //This plugin does nothing if woocommerce appointments is not active
     if(is_plugin_active('woocommerce-appointments/woocommerce-appointments.php')){
         wp_enqueue_style('waep-styles', WOOCOMMERCE_APPOINTMENTS_EVENT_PICKER_URL . '/assets/css/styles.css');
@@ -53,7 +53,7 @@ function my_plugin_override() {
  * When set to a value of "false" events in the past will be filtered out. 
  */
 
-function appointment_products($atts) {
+function is_wep_appointment_products($atts) {
     $atts = shortcode_atts( array(
         'columns' => '4',
         'orderby' => 'title',
@@ -105,10 +105,10 @@ function appointment_products($atts) {
     if ( ! empty( $atts['ids'] ) ) {
         $query_args['post__in'] = array_map( 'trim', explode( ',', $atts['ids'] ) );
     }
-    return product_loop( $query_args, $atts, 'products' );
+    return is_wep_product_loop( $query_args, $atts, 'products' );
 }
 
-function product_loop( $query_args, $atts, $loop_name ) {
+function is_wep_product_loop( $query_args, $atts, $loop_name ) {
     global $woocommerce_loop;
 
     $products                    = new WP_Query( apply_filters( 'woocommerce_shortcode_products_query', $query_args, $atts, $loop_name ) );
@@ -126,7 +126,7 @@ function product_loop( $query_args, $atts, $loop_name ) {
             global $product;
             //Only show events that are not in the past and are not too far off in the future to be bookable.
             if( is_wc_appointment_product($product) ){
-                $slots_in_range = product_slots($product);
+                $slots_in_range = is_wep_product_slots($product);
                 if( (!is_wp_error( $slots_in_range ) && is_array($slots_in_range) && count($slots_in_range)>0) || $atts['show_historical_appointments']=='true' ) {
                     wc_get_template_part( 'content', $atts['template'] );
                 }
@@ -144,19 +144,19 @@ function product_loop( $query_args, $atts, $loop_name ) {
     return '<div class="woocommerce columns-' . $columns . '">' . ob_get_clean() . '</div>';
 }
 
-add_shortcode( apply_filters( "appointment_products_shortcode_tag", "appointment_products" ), "appointment_products" );
+add_shortcode( apply_filters( "appointment_products_shortcode_tag", "appointment_products" ), "is_wep_appointment_products" );
 
 /*
  * Insert dates on the product listing for appointable product with duration unit of "day"
  */
 
-add_filter("woocommerce_before_shop_loop_item_title","add_appointment_dates",13);
-add_filter('woocommerce_before_single_product_summary',"add_appointment_dates",13);
+add_filter("woocommerce_before_shop_loop_item_title","is_wep_add_appointment_dates",13);
+add_filter('woocommerce_before_single_product_summary',"is_wep_add_appointment_dates",13);
 
-function add_appointment_dates(){
+function is_wep_add_appointment_dates(){
     global $product;
     if( is_wc_appointment_product($product) ){
-        $slots_in_range = product_slots_bookable($product);
+        $slots_in_range = is_wep_product_slots_bookable($product);
         $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
         $duration_period = $product->duration > 1 ? $product->duration_unit . "s" : $product->duration_unit;
         if( !is_wp_error( $appointments ) && $product->duration_unit=="day") {
@@ -169,7 +169,7 @@ function add_appointment_dates(){
                     $conjunction = "and<br>";
                 }
                 $day_num = date("j",$slot);
-                $day_with_suffix = ordinal($day_num);
+                $day_with_suffix = is_wep_ordinal($day_num);
                 $month = date("F", $slot);
                 $year = date("Y", $slot);
                 echo  $conjunction . "<span class='event-day'>" . $day_with_suffix . " "  . $month . " </span><span class='event-year'>" . $year . "</span><br>";
@@ -182,7 +182,7 @@ function add_appointment_dates(){
     }
 }
 
-function ordinal($number) {
+function is_wep_ordinal($number) {
     $ends = array('th','st','nd','rd','th','th','th','th','th','th');
     if ((($number % 100) >= 11) && (($number%100) <= 13))
         return $number. 'th';
@@ -193,13 +193,13 @@ function ordinal($number) {
 /*
  * Insert number of slots available 
  */
-add_filter("woocommerce_before_single_product_summary","add_slots_left",11);
-function add_slots_left(){
+add_filter("woocommerce_before_single_product_summary","is_wep_add_slots_left",11);
+function is_wep_add_slots_left(){
     global $product;
 
     if( is_wc_appointment_product($product) ){
         
-        $slots_in_range = product_slots_bookable($product);
+        $slots_in_range = is_wep_product_slots_bookable($product);
         $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
  
         if( !is_wp_error( $appointments ) ) {
@@ -220,12 +220,12 @@ function add_slots_left(){
  * Insert tags on the product listing to reflect the booking status of the product.
  */
  
-add_filter("woocommerce_after_shop_loop_item","add_booking_status",12);
-function add_booking_status(){
+add_filter("woocommerce_after_shop_loop_item","is_wep_add_booking_status",12);
+function is_wep_add_booking_status(){
     global $product;
     if( is_wc_appointment_product($product) ){
         
-        $slots_in_range = product_slots_bookable($product);
+        $slots_in_range = is_wep_product_slots_bookable($product);
         $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
  
        
@@ -250,16 +250,16 @@ function add_booking_status(){
     
 }
 
-function product_slots($product){
-    return product_slots_in_range($product,current_time( 'timestamp' ));
+function is_wep_product_slots($product){
+    return is_wep_product_slots_in_range($product,current_time( 'timestamp' ));
 }
  
 
-function product_slots_bookable($product){
-    return product_slots_in_range($product);
+function is_wep_product_slots_bookable($product){
+    return is_wep_product_slots_in_range($product);
 }
 
-function product_slots_in_range($product,$start_time = null, $end_time = null){
+function is_wep_product_slots_in_range($product,$start_time = null, $end_time = null){
     $min_date = $product->get_min_date_a();
     $max_date = $product->get_max_date_a();
     $check_from = $start_time ? $start_time :  strtotime( "midnight +{$min_date['value']} {$min_date['unit']}", current_time( 'timestamp' ) );
