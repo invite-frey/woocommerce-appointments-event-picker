@@ -59,6 +59,7 @@ function appointment_products($atts) {
         'columns' => '4',
         'orderby' => 'title',
         'order'   => 'asc',
+        'template'=> 'product',
         'ids'     => '',
         'skus'    => '',
         'product_type'    => 'appointment',
@@ -119,6 +120,7 @@ function product_loop( $query_args, $atts, $loop_name ) {
 
     if ( $products->have_posts() ) {
         do_action( "woocommerce_shortcode_before_{$loop_name}_loop" );
+        do_action( 'woocommerce_before_single_product' );
         woocommerce_product_loop_start();
         while ( $products->have_posts() ) {
             $products->the_post();
@@ -127,7 +129,7 @@ function product_loop( $query_args, $atts, $loop_name ) {
             if( is_wc_appointment_product($product) ){
                 $slots_in_range = product_slots($product);
                 if( (!is_wp_error( $slots_in_range ) && is_array($slots_in_range) && count($slots_in_range)>0) || $atts['show_historical_appointments']=='true' ) {
-                    wc_get_template_part( 'content', 'product' );
+                    wc_get_template_part( 'content', $atts['template'] );
                 }
             }
         }
@@ -146,22 +148,97 @@ function product_loop( $query_args, $atts, $loop_name ) {
 add_shortcode( apply_filters( "appointment_products_shortcode_tag", "appointment_products" ), "appointment_products" );
 
 /*
+ * Insert dates on the product listing for appointable product with duration unit of "day"
+ */
+
+add_filter("woocommerce_before_shop_loop_item_title","add_appointment_dates",13);
+add_filter('woocommerce_before_single_product_summary',"add_appointment_dates",13);
+
+function add_appointment_dates(){
+    global $product;
+    if( is_wc_appointment_product($product) ){
+        $slots_in_range = product_slots_bookable($product);
+        $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
+        $duration_period = $product->duration > 1 ? $product->duration_unit . "s" : $product->duration_unit;
+        if( !is_wp_error( $appointments ) && $product->duration_unit=="day") {
+            $slots_count = count($slots_in_range);
+            $n = 1;
+            $conjunction = "";
+            ?><div class="appointment-slot-dates"><?php
+            foreach($slots_in_range as $slot){
+                if( $n == $slots_count && $slots_count>1 ){
+                    $conjunction = "and<br>";
+                }
+                $day_num = date("j",$slot);
+                $day_with_suffix = ordinal($day_num);
+                $month = date("F", $slot);
+                $year = date("Y", $slot);
+                echo  $conjunction . "<span class='event-day'>" . $day_with_suffix . " "  . $month . " </span><span class='event-year'>" . $year . "</span><br>";
+                $n += 1;
+            }
+            ?>
+            <div class="appointment-slot-duration"><?php echo $product->duration . " " . $duration_period; ?></div>
+            </div><?php
+        }
+    }
+}
+
+function ordinal($number) {
+    $ends = array('th','st','nd','rd','th','th','th','th','th','th');
+    if ((($number % 100) >= 11) && (($number%100) <= 13))
+        return $number. 'th';
+    else
+        return $number. $ends[$number % 10];
+}
+
+/*
+ * Insert number of slots available 
+ */
+add_filter("woocommerce_before_single_product_summary","add_slots_left",11);
+function add_slots_left(){
+    global $product;
+
+    if( is_wc_appointment_product($product) ){
+        
+        $slots_in_range = product_slots_bookable($product);
+        $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
+ 
+        if( !is_wp_error( $appointments ) ) {
+            $available_count = 0;
+
+            foreach($appointments as $a){
+                $available_count += $a["available"];
+            }
+
+            $slots_message = $available_count < 5 && $available_count > 0 ? "Only " . $available_count . " places left!" : "";
+            $slots_message = $available_count == 0 ? "SOLD OUT" : $slots_message;
+            ?><div class="slots-limited-message"><?php echo $slots_message ?></div><?php
+        }
+    }
+}
+
+/*
  * Insert tags on the product listing to reflect the booking status of the product.
  */
  
- add_filter("woocommerce_after_shop_loop_item","add_booking_status",12);
-
+add_filter("woocommerce_after_shop_loop_item","add_booking_status",12);
 function add_booking_status(){
     global $product;
     if( is_wc_appointment_product($product) ){
         
         $slots_in_range = product_slots_bookable($product);
         $appointments = wc_appointments_get_time_slots($product,$slots_in_range);
-
+ 
        
         if( !is_wp_error( $appointments ) ) {
-            $div_class = is_array($appointments) && count($appointments)>0 ? "event-available" : "event-sold-out";
-            $div_class = is_array($appointments) && count($appointments)>0 && count($appointments)<5 ? "event-limited" : $div_class;
+            $available_count = 0;
+
+            foreach($appointments as $a){
+                $available_count += $a["available"];
+            }
+
+            $div_class = is_array($appointments) && $available_count>0 ? "event-available" : "event-sold-out";
+            $div_class = is_array($appointments) && $available_count>0 && $available_count<5 ? "event-limited" : $div_class;
             $banner_text = $div_class=="event-sold-out" && is_array($slots_in_range) && count($slots_in_range)==0 ? "CLOSED<br>for bookings" : "SOLD OUT";
     
             ?>
@@ -177,7 +254,7 @@ function add_booking_status(){
 function product_slots($product){
     return product_slots_in_range($product,current_time( 'timestamp' ));
 }
-
+ 
 
 function product_slots_bookable($product){
     return product_slots_in_range($product);

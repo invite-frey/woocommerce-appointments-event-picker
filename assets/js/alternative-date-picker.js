@@ -27,7 +27,9 @@ jQuery( document ).ready( ($) => {
         if ( year && month && day ) {
             const date = `${year}-${month}-${day}`;
             $('.wcaep-available-date').removeClass('date-selected');
+            $(`.wcaep-available-date>.checkmark`).attr("opacity", 0);
             $(`#available-date-${date}`).addClass("date-selected");
+            $(`#available-date-${date}>.checkmark`).attr("opacity", 1);
             $('input.appointment_date_day').val(day);
             $('input.appointment_date_month').val(month);
             $('input.appointment_date_year').val(year).change();
@@ -67,7 +69,6 @@ jQuery( document ).ready( ($) => {
         
         fetchAppointmentData(product_id,wc_appointments_date_picker_args.ajax_url, wc_appointment_form_params.nonce_find_day_slots)
             .done( function( data ) {
-                console.log(data);
                 const start_date = new Date();
                 const now = new Date();
                 let min_bookable_date = new Date();
@@ -147,7 +148,8 @@ jQuery( document ).ready( ($) => {
                         if( date.getTime() > min_bookable_date.getTime() ){
                             $('.picker .wcaep-datepicker-list').append(`
                                 <div class="wcaep-available-date" id="available-date-${ymdIndex}" data-day="${day}" data-month="${month}" data-year="${year}">
-                                    <a class="wcaep-date-option" href="#" data-day="${day}" data-month="${month}" data-year="${year}">${dateString}</a>
+                                <svg class="checkmark" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" opacity="0"><path fill="green" d="M20.285 2l-11.285 11.567-5.286-5.011-3.714 3.716 9 8.728 15-15.285z"/></svg>
+                                    <a class="wcaep-date-option" href="#" data-day="${day}" data-month="${month}" data-year="${year}" style="position: relative; left: 10px; top: -5px;">${dateString}</a>
                                 </div>   
                             `)
                         }else{
@@ -178,7 +180,55 @@ jQuery( document ).ready( ($) => {
     },0)
 
     //----------------------------------------------------------------------------------
-    //Modify the Event listing page
+    //Determine which promos to show 
+
+    setTimeout( () => {
+        //Which categories are available?
+        const promos = Array.from(document.querySelectorAll(".wpb_wrapper ul.products>li"))
+
+        const productElements = promos.map( el => {
+            return Array.from(el.classList)
+                .filter( cl => {
+                    return cl.match(/(product_cat-)|([a-z-]*)/g).length > 1; 
+                })
+                .map( cl => {
+                    return cl.match(/(product_cat-)|([a-z-]*)/g)[1];
+                })
+                .filter( cat => cat.length > 0 );
+        })
+        var categories = {}
+        for( const el of productElements ){
+            for( const cat of el ){
+                categories[cat] = cat
+            }
+        }
+
+        Array.from(document.querySelectorAll('.product_promos .wpb_column')).forEach( el => el.style.display="none")
+        let numVisible = 0
+
+        Object.getOwnPropertyNames(categories).forEach( cat => {
+            const elements = document.querySelectorAll(`.promo_product_category_${cat}`)
+            if(elements.length>0){
+                Array.from(elements).forEach(element => {
+                    numVisible += 1
+                    element.style.display = "block";
+                    element.style.marginLeft = "auto";
+                    element.style.marginRight = "auto";
+                });
+            }
+        })
+
+        if(numVisible===0){
+            const row = document.querySelector("#productpromos")
+            if(row){
+                row.style.display = "none";
+            }
+        }
+
+        console.log(categories)
+
+
+    }, 0)
 
    
 
